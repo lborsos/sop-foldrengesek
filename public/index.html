@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Földrengések – Web kliens</title>
+  <style>
+    body { font-family: system-ui, Arial; margin: 20px; max-width: 1000px; }
+    h1 { margin: 0 0 10px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin: 10px 0; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; }
+    input, button { padding: 8px; }
+    input { width: 220px; }
+    button { cursor: pointer; }
+    pre { background: #f6f6f6; padding: 12px; border-radius: 10px; overflow: auto; }
+    .small { color: #666; font-size: 12px; }
+    label { display:block; font-size: 12px; color:#333; margin-bottom:4px;}
+  </style>
+</head>
+<body>
+  <h1>Földrengések – egyszerű web kliens</h1>
+  <div class="small">API base: <span id="baseUrl"></span></div>
+
+  <div class="card">
+    <h2>Beállítás</h2>
+    <div class="row">
+      <div>
+        <label>API base URL</label>
+        <input id="apiBase" value="http://localhost:3000" />
+      </div>
+      <div>
+        <label>X-API-Key (CUD-hoz)</label>
+        <input id="apiKey" value="vizsga123" />
+      </div>
+      <div style="align-self:end;">
+        <button id="saveCfg">Mentés</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card" style="flex:1; min-width:320px;">
+      <h2>Települések (CRUD)</h2>
+
+      <div class="row">
+        <button id="btnListTelepules">Lista frissítése</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Név</label>
+          <input id="tNev" placeholder="pl. Kaposvár" />
+        </div>
+        <div>
+          <label>Vármegye</label>
+          <input id="tVarmegye" placeholder="pl. Somogy" />
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="btnCreate">Létrehozás (POST)</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>ID (módosítás/törlés)</label>
+          <input id="tId" placeholder="pl. 1" />
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="btnUpdate">Módosítás (PUT)</button>
+        <button id="btnDelete">Törlés (DELETE)</button>
+      </div>
+
+      <h3>Eredmény</h3>
+      <pre id="outTelepules">Kattints a "Lista frissítése" gombra.</pre>
+    </div>
+
+    <div class="card" style="flex:1; min-width:320px;">
+      <h2>Lekérdezések</h2>
+
+      <div class="row">
+        <button id="btnSomogy">Somogy települések (csak név, ABC)</button>
+      </div>
+
+      <div class="row">
+        <button id="btnVarmegyeDb">Vármegyénként földrengésszám</button>
+      </div>
+
+      <div class="row">
+        <button id="btnMaxMag">Legnagyobb magnitúdójú földrengés</button>
+      </div>
+
+      <h3>Eredmény</h3>
+      <pre id="outQuery">Kattints valamelyik lekérdezés gombra.</pre>
+    </div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  function getCfg() {
+    const apiBase = $("apiBase").value.trim().replace(/\/+$/, "");
+    const apiKey = $("apiKey").value.trim();
+    $("baseUrl").textContent = apiBase;
+    return { apiBase, apiKey };
+  }
+
+  $("saveCfg").addEventListener("click", () => {
+    const cfg = getCfg();
+    localStorage.setItem("apiBase", cfg.apiBase);
+    localStorage.setItem("apiKey", cfg.apiKey);
+  });
+
+  (function loadCfg() {
+    const apiBase = localStorage.getItem("apiBase");
+    const apiKey = localStorage.getItem("apiKey");
+    if (apiBase) $("apiBase").value = apiBase;
+    if (apiKey) $("apiKey").value = apiKey;
+    getCfg();
+  })();
+
+  async function apiFetch(path, options = {}) {
+    const { apiBase } = getCfg();
+    const res = await fetch(apiBase + path, options);
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = text; }
+    if (!res.ok) {
+      throw new Error(typeof data === "string" ? data : (data.error || JSON.stringify(data)));
+    }
+    return data;
+  }
+
+  async function listTelepules() {
+    $("outTelepules").textContent = "Betöltés...";
+    try {
+      const data = await apiFetch("/telepulesek");
+      $("outTelepules").textContent = JSON.stringify(data, null, 2);
+    } catch (e) {
+      $("outTelepules").textContent = "Hiba: " + e.message;
+    }
+  }
+
+  $("btnListTelepules").addEventListener("click", listTelepules);
+
+  $("btnCreate").addEventListener("click", async () => {
+    $("outTelepules").textContent = "Létrehozás...";
+    const { apiKey } = getCfg();
+    const nev = $("tNev").value.trim();
+    const varmegye = $("tVarmegye").value.trim();
+    try {
+      const data = await apiFetch("/telepulesek", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey
+        },
+        body: JSON.stringify({ nev, varmegye })
+      });
+      $("outTelepules").textContent = "OK:\n" + JSON.stringify(data, null, 2);
+      await listTelepules();
+    } catch (e) {
+      $("outTelepules").textContent = "Hiba: " + e.message;
+    }
+  });
+
+  $("btnUpdate").addEventListener("click", async () => {
+    $("outTelepules").textContent = "Módosítás...";
+    const { apiKey } = getCfg();
+    const id = $("tId").value.trim();
+    const nev = $("tNev").value.trim();
+    const varmegye = $("tVarmegye").value.trim();
+    try {
+      const data = await apiFetch("/telepulesek/" + encodeURIComponent(id), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey
+        },
+        body: JSON.stringify({ nev, varmegye })
+      });
+      $("outTelepules").textContent = "OK:\n" + JSON.stringify(data, null, 2);
+      await listTelepules();
+    } catch (e) {
+      $("outTelepules").textContent = "Hiba: " + e.message;
+    }
+  });
+
+  $("btnDelete").addEventListener("click", async () => {
+    $("outTelepules").textContent = "Törlés...";
+    const { apiKey } = getCfg();
+    const id = $("tId").value.trim();
+    try {
+      const data = await apiFetch("/telepulesek/" + encodeURIComponent(id), {
+        method: "DELETE",
+        headers: { "X-API-Key": apiKey }
+      });
+      $("outTelepules").textContent = "OK:\n" + JSON.stringify(data, null, 2);
+      await listTelepules();
+    } catch (e) {
+      $("outTelepules").textContent = "Hiba: " + e.message;
+    }
+  });
+
+  // Tanári lekérdezések
+  $("btnSomogy").addEventListener("click", async () => {
+    $("outQuery").textContent = "Betöltés...";
+    try {
+      const data = await apiFetch("/telepulesek/somogy");
+      $("outQuery").textContent = JSON.stringify(data, null, 2);
+    } catch (e) {
+      $("outQuery").textContent = "Hiba: " + e.message;
+    }
+  });
+
+  $("btnVarmegyeDb").addEventListener("click", async () => {
+    $("outQuery").textContent = "Betöltés...";
+    try {
+      const data = await apiFetch("/statisztika/varmegye");
+      $("outQuery").textContent = JSON.stringify(data, null, 2);
+    } catch (e) {
+      $("outQuery").textContent = "Hiba: " + e.message;
+    }
+  });
+
+  $("btnMaxMag").addEventListener("click", async () => {
+    $("outQuery").textContent = "Betöltés...";
+    try {
+      const data = await apiFetch("/naplo/maxmagnitudo");
+      $("outQuery").textContent = JSON.stringify(data, null, 2);
+    } catch (e) {
+      $("outQuery").textContent = "Hiba: " + e.message;
+    }
+  });
+
+  // induláskor település lista
+  listTelepules();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+MariaDB [foldrengesek]> desc naplo;
++------------+--------------+------+-----+---------+----------------+
+| Field      | Type         | Null | Key | Default | Extra          |
++------------+--------------+------+-----+---------+----------------+
+| id         | int(11)      | NO   | PRI | NULL    | auto_increment |
+| datum      | date         | NO   |     | NULL    |                |
+| ido        | time         | NO   |     | NULL    |                |
+| telepid    | int(11)      | NO   | MUL | NULL    |                |
+| magnitudo  | decimal(3,1) | YES  |     | NULL    |                |
+| intenzitas | decimal(3,1) | YES  |     | NULL    |                |
++------------+--------------+------+-----+---------+----------------+
+6 rows in set (0.003 sec)
+
+MariaDB [foldrengesek]> desc telepules;
++----------+--------------+------+-----+---------+----------------+
+| Field    | Type         | Null | Key | Default | Extra          |
++----------+--------------+------+-----+---------+----------------+
+| id       | int(11)      | NO   | PRI | NULL    | auto_increment |
+| nev      | varchar(100) | NO   |     | NULL    |                |
+| varmegye | varchar(100) | NO   |     | NULL    |                |
++----------+--------------+------+-----+---------+----------------+
+
