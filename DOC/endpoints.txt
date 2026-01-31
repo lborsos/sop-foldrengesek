@@ -1,0 +1,27 @@
+| HTTP   | Endpoint                | Funkció                               | Header      | Body              | Path / Query |
+| ------ | ----------------------- | ------------------------------------- | ----------- | ----------------- | ------------ |
+| GET    | `/telepulesek`          | Települések listázása                 | –           | –                 | –            |
+| POST   | `/telepulesek`          | Új település létrehozása              | `X-API-Key` | `nev`, `varmegye` | –            |
+| PUT    | `/telepulesek/{id}`     | Település módosítása                  | `X-API-Key` | `nev`, `varmegye` | `id`         |
+| DELETE | `/telepulesek/{id}`     | Település törlése                     | `X-API-Key` | –                 | `id`         |
+| GET    | `/telepulesek/somogy`   | Somogy települései (csak név, ABC)    | –           | –                 | –            |
+| GET    | `/statisztika/varmegye` | Földrengések száma vármegyénként      | –           | –                 | –            |
+| GET    | `/naplo/maxmagnitudo`   | Legnagyobb magnitúdójú földrengés(ek) | –           | –                 | –            |
+
+
+| Elem        | Leírás                     |
+| ----------- | -------------------------- |
+| Típus       | API key                    |
+| Header neve | `X-API-Key`                |
+| Ellenőrzés  | `requireApiKey` middleware |
+| Tárolás     | `.env` fájl                |
+
+
+| Elem                 | Hol                 |
+| -------------------- | ------------------- |
+| Hitelesítés          | HTTP header         |
+| Új / módosított adat | Request body (JSON) |
+| Azonosító            | URL path paraméter  |
+| Válasz               | JSON                |
+
+

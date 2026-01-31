@@ -1,0 +1,38 @@
+#Health check (DB + szerver)
+curl http://localhost:3000/health
+
+#ellenőrzöm, hogy az API key alapú azonosítás működik-e.
+curl -X POST -H "X-API-Key: vizsga123" http://192.168.200.17:3000/admin/ping
+
+#Települések listázása
+curl http://localhost:3000/telepulesek
+
+#Új település létrehozása (C – Create)
+curl -X POST http://localhost:3000/telepulesek \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: vizsga123" \
+  -d '{"nev":"Kaposvár","varmegye":"Somogy"}'
+
+
+#Település módosítása (U – Update)
+curl -X PUT http://localhost:3000/telepulesek/3 \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: vizsga123" \
+  -d '{"nev":"Kaposvár2","varmegye":"Somogy"}'
+
+#Település törlése (D – Delete)
+curl -X DELETE http://localhost:3000/telepulesek/3 \
+  -H "X-API-Key: vizsga123"
+
+
+#Somogy vármegye települései (csak név, ABC)
+curl http://localhost:3000/telepulesek/somogy
+
+
+#Földrengések száma vármegyénként
+curl http://localhost:3000/statisztika/varmegye
+
+#Legnagyobb magnitúdójú földrengés(ek)
+curl http://localhost:3000/naplo/maxmagnitudo
+
+
